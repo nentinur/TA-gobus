@@ -21,7 +21,7 @@ Leaflet.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
-export default function TrackBus(props) {
+export default function HistoryMaps(props) {
   return (
     <MapContainer
       center={[-6.9316648, 107.7229107]}
@@ -39,40 +39,50 @@ export default function TrackBus(props) {
 }
 
 function TrackMaps(props) {
-  const nobus = props.no_bus;
+  const { no_bus: nobus } = props; // Destructuring props untuk mengambil no_bus
   const map = useMap();
-  const [lat, setLat] = useState(0);
-  const [lng, setLng] = useState(0);
+  const [lat, setLat] = useState(null);
+  const [lng, setLng] = useState(null);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      console.log("no bus: ", nobus);
+    const fetchPosition = () => {
       axios
         .get("http://localhost:3100/posisi")
-        .then(function (response) {
-          console.log("get position: ", response.data);
-          setLat(parseFloat(response.data.lat));
-          setLng(parseFloat(response.data.lng));
-        })
-        .catch(function (error) {
-          console.log(error);
-        })
-        .then(function () {
-          // always executed
-        });
-    }, 3000);
+        .then((response) => {
+          const lat = response.data[0].lat;
+          const lng = response.data[0].lng;
+          const parsedLat = parseFloat(lat);
+          const parsedLng = parseFloat(lng);
+          console.log("position bus:", lat, lng);
 
-    // Membersihkan interval pada unmount atau ketika komponen di-update
+          // Validasi bahwa lat dan lng adalah angka
+          if (!isNaN(parsedLat) && !isNaN(parsedLng)) {
+            setLat(parsedLat);
+            setLng(parsedLng);
+          } else {
+            console.error("Received invalid lat/lng values:", lat, lng);
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching position:", error);
+        });
+    };
+
+    // Mulai interval
+    const intervalId = setInterval(fetchPosition, 3000);
+
+    // Hentikan interval ketika komponen di-unmount atau nobus berubah
     return () => {
       clearInterval(intervalId);
     };
-  }, [nobus]); // Menambahkan [nobus] sebagai dependensi untuk mengikuti perubahan nobus
+  }, [nobus]);
 
-  return (
+  // Jika lat dan lng adalah null atau tidak valid, tidak render Marker
+  return lat !== null && lng !== null ? (
     <Marker position={[lat, lng]}>
-      <Popup>bus</Popup>
+      <Popup>Bus {nobus}</Popup>
     </Marker>
-  );
+  ) : null;
 }
 
 // mengambil posisi terkini
@@ -88,14 +98,14 @@ const CurrrentPosition = () => {
       (err) => console.error(err)
     );
   }, []);
-  useEffect(() => {
-    setInterval(() => {
-      map.locate().on("locationfound", function (e) {
-        setPosition(e.latlng);
-        map.flyTo(e.latlng, map.getZoom());
-      });
-    }, 3000);
-  }, [map]);
+  // useEffect(() => {
+  //   setInterval(() => {
+  //     map.locate().on("locationfound", function (e) {
+  //       setPosition(e.latlng);
+  //       map.flyTo(e.latlng, map.getZoom());
+  //     });
+  //   }, 3000);
+  // }, [map]);
   return position === null ? null : (
     <Marker position={position}>
       <Popup>You are here</Popup>

@@ -18,7 +18,7 @@ const initialPosition = {
   lng: 107.7229107,
 };
 
-export default function BookingMap({ onChange }) {
+export default function BookingMaps({ onChange }) {
   const [center, setCenter] = useState(initialPosition);
   const [markerPosition, setMarkerPosition] = useState(initialPosition);
 

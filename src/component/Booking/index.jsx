@@ -23,7 +23,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LoginButton } from "../Login/LoginButton";
-import BookingMap from "../GObusMaps/BookingMap";
+import BookingMaps from "../Maps/BookingMaps";
 
 export const Booking = () => {
   const [open, setOpen] = useState();
@@ -220,7 +220,7 @@ export const Booking = () => {
               Pilih Titik Anda Naik:
             </Typography>
           </Box>
-          <BookingMap onChange={handleTitikNaikChange} />
+          <BookingMaps onChange={handleTitikNaikChange} />
           <AppBar
             position="fixed"
             color="primary"

@@ -11,7 +11,7 @@ import {
 import { useLocation } from "react-router-dom";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import DirectionsBus from "@mui/icons-material/DirectionsBus";
-import TrackBus from "../GObusMaps/TrackBus";
+import HistoryMaps from "../Maps/HistoryMaps";
 import { BackButton } from "../Home/BackButton";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -97,7 +97,7 @@ export default function DetailHistory() {
         </Box>
       </div>
       <div>
-        <TrackBus no_bus={data.no_bus} />
+        <HistoryMaps no_bus={data.no_bus} />
       </div>
     </div>
   );

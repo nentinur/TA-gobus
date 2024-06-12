@@ -13,7 +13,6 @@ import { SignUp } from "./component/SignUp";
 import HistoryPage from "./component/History/HistoryPage";
 import { Booking } from "./component/Booking";
 import { EditProfile } from "./component/Profile/EditProfile";
-import PenumpangPage from "./component/Penumpang/PenumpangPage";
 
 const router = createBrowserRouter([
   {
@@ -61,10 +60,6 @@ const router = createBrowserRouter([
       {
         path: "profile",
         element: <ProfilePage />,
-      },
-      {
-        path: "penumpang",
-        element: <PenumpangPage />,
       },
       {
         path: "penumpang-detail",
