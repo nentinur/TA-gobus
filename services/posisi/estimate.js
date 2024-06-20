@@ -34,10 +34,16 @@ async function predict(jarak, kecepatan, hambatan) {
     throw error; // Rethrow error to be caught by the calling function
   }
 }
+const jarak = 3;
+const hambatan = 7;
+const kecepatan = 20;
+
+// TO DO:
+// - hitung jarak sisa
+// - hitung kecepatan
 
 module.exports = async (httpRequest, httpResponse) => {
   try {
-    const { jarak, kecepatan, hambatan } = httpRequest.body;
     const result = await predict(jarak, kecepatan, hambatan);
     httpResponse.json({ result });
   } catch (error) {

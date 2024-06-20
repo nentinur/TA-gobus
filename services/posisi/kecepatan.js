@@ -12,8 +12,14 @@ module.exports = (httpRequest, httpResponse) => {
   // Format waktu menjadi string yang sesuai dengan format yang dibutuhkan di SQL
   const timeString = `${hours}:${minutes}:${seconds}`;
   const hitungKecepatan = (data) => {
-    let kecepatan = 0;
-    for (let i = 1; i < data.lengths; i++) {
+    if (data.length < 2) {
+      throw new Error("Data harus berisi setidaknya dua titik.");
+    }
+
+    let totalJarak = 0;
+    let totalWaktu = 0;
+
+    for (let i = 1; i < data.length; i++) {
       const lat1 = data[i - 1]["lat"];
       const lon1 = data[i - 1]["lng"];
       const lat2 = data[i]["lat"];
@@ -31,13 +37,50 @@ module.exports = (httpRequest, httpResponse) => {
 
       const jarak = 6371 * c; // Radius Bumi dalam kilometer
 
-      const waktu = data[i]["waktu (detik)"] / 3600;
+      // Konversi waktu dari format HH:MM:SS ke detik
+      const waktu1 = toSeconds(data[i - 1]["time"]);
+      const waktu2 = toSeconds(data[i]["time"]);
+      const waktu = (waktu2 - waktu1) / 3600; // Konversi ke jam
 
-      kecepatan = jarak / waktu;
+      if (isNaN(jarak) || isNaN(waktu) || waktu <= 0) {
+        console.error(
+          `Kesalahan pada segmen ${i}: Jarak atau waktu tidak valid`
+        );
+        continue; // Abaikan segmen dengan data tidak valid
+      }
 
-      return kecepatan;
+      totalJarak += jarak;
+      totalWaktu += waktu;
     }
+
+    if (totalWaktu === 0) {
+      throw new Error("Total waktu tidak valid (nol atau negatif).");
+    }
+
+    const kecepatanRataRata = totalJarak / totalWaktu;
+    return kecepatanRataRata;
   };
+
+  const toSeconds = (timeString) => {
+    const [hours, minutes, seconds] = timeString.split(":").map(Number);
+    return hours * 3600 + minutes * 60 + seconds;
+  };
+
+  const toRadians = (degree) => {
+    return degree * (Math.PI / 180);
+  };
+
+  const data = [
+    { lat: "-6.9340079", lng: "107.7281035", time: "22:37:09" },
+    { lat: "-6.9340079", lng: "107.7281035", time: "22:38:42" },
+    { lat: "-6.9340079", lng: "107.7281035", time: "22:38:43" },
+    { lat: "-6.9340079", lng: "107.7281035", time: "22:43:16" },
+    { lat: "-6.9340079", lng: "107.7281035", time: "22:43:19" },
+    { lat: "-6.9340079", lng: "107.7281035", time: "22:43:25" },
+  ];
+
+  console.log("kecepatan: ", hitungKecepatan(data));
+
   pool.query(
     `
         SELECT lat, lng, time FROM app.posisi WHERE time >= $1;
@@ -46,7 +89,6 @@ module.exports = (httpRequest, httpResponse) => {
     (dbError, dbResponse) => {
       if (dbError) throw dbError;
       httpResponse.json(dbResponse.rows);
-      hitungKecepatan(dbResponse);
     }
   );
 };
