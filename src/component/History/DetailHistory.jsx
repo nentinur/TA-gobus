@@ -22,6 +22,7 @@ export default function DetailHistory() {
   console.log("index: " + id);
   // mengambil data detail pesanan
   const [data, setData] = useState([]);
+  const [prediction, setPrediction] = useState([]);
   useEffect(() => {
     axios
       .get("http://localhost:3100/pesanan/pesanan-detail", {
@@ -42,14 +43,10 @@ export default function DetailHistory() {
   }, []);
   useEffect(() => {
     axios
-      .get("http://localhost:3100/posisi/kecepatan", {
-        params: {
-          id_pesanan: id,
-        },
-      })
+      .get("http://localhost:3100/posisi/predict", {})
       .then(function (response) {
-        console.log(response.data);
-        setData(response.data);
+        console.log("prediction: ", response.data.result);
+        setPrediction(response.data);
       })
       .catch(function (error) {
         console.log(error);
@@ -93,7 +90,9 @@ export default function DetailHistory() {
           </ListItem>
         </List>
         <Box sx={{ padding: 2 }}>
-          <Typography variant="h6">Estimasi waktu kedatangan: </Typography>
+          <Typography variant="h6">
+            Estimasi waktu kedatangan: {prediction.result}
+          </Typography>
         </Box>
       </div>
       <div>
