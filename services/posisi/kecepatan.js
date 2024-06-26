@@ -1,91 +1,65 @@
 const pool = require("../../utils/db-pool");
 
 module.exports = (httpRequest, httpResponse) => {
-  const now = new Date();
-  const last5Minutes = new Date(now.getTime() - 5 * 60000); // 5 * 60000 adalah 5 menit dalam milidetik
+  const fs = require("fs");
+  const csv = require("csv-parser");
+  const geolib = require("geolib");
 
-  // Mendapatkan bagian waktu (jam, menit, dan detik) dari objek Date
-  const hours = last5Minutes.getHours();
-  const minutes = last5Minutes.getMinutes();
-  const seconds = last5Minutes.getSeconds();
+  // Fungsi untuk menghitung jumlah hambatan dan skor hambatan
+  function hitungHambatan(titik1, titik2, csvFilePath) {
+    const bufferedPoints = [];
+    let hambatanSkor = 0;
+    let hambatanCount = 0;
 
-  // Format waktu menjadi string yang sesuai dengan format yang dibutuhkan di SQL
-  const timeString = `${hours}:${minutes}:${seconds}`;
-  const hitungKecepatan = (data) => {
-    if (data.length < 2) {
-      throw new Error("Data harus berisi setidaknya dua titik.");
-    }
+    fs.createReadStream(csvFilePath)
+      .pipe(csv())
+      .on("data", (row) => {
+        const latitude = parseFloat(row.latitude);
+        const longitude = parseFloat(row.longitude);
+        const skorHambatan = parseFloat(row.skor_hambatan);
 
-    let totalJarak = 0;
-    let totalWaktu = 0;
+        if (!isNaN(latitude) && !isNaN(longitude) && !isNaN(skorHambatan)) {
+          const distanceToLine = geolib.getDistanceFromLine(
+            { latitude, longitude },
+            { latitude: titik1[0], longitude: titik1[1] },
+            { latitude: titik2[0], longitude: titik2[1] }
+          );
 
-    for (let i = 1; i < data.length; i++) {
-      const lat1 = data[i - 1]["lat"];
-      const lon1 = data[i - 1]["lng"];
-      const lat2 = data[i]["lat"];
-      const lon2 = data[i]["lng"];
+          if (distanceToLine <= 550) {
+            // radius dalam meter
+            hambatanSkor += skorHambatan;
+            hambatanCount += 1;
+          }
+        }
+      })
+      .on("end", () => {
+        console.log("Jumlah Hambatan:", hambatanCount);
+        console.log("Skor Hambatan:", hambatanSkor);
+      })
+      .on("error", (err) => {
+        console.error("Error saat membaca file CSV:", err);
+      });
+  }
 
-      const delta_lat = toRadians(lat2 - lat1);
-      const delta_lon = toRadians(lon2 - lon1);
+  // Contoh penggunaan fungsi
+  const titik1 = [-6.904757, 107.6773];
+  const titik2 = [-6.904199, 107.667625];
 
-      const a =
-        Math.pow(Math.sin(delta_lat / 2), 2) +
-        Math.cos(toRadians(lat1)) *
-          Math.cos(toRadians(lat2)) *
-          Math.pow(Math.sin(delta_lon / 2), 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const csvFilePath = "model/hambatan.csv";
 
-      const jarak = 6371 * c; // Radius Bumi dalam kilometer
-
-      // Konversi waktu dari format HH:MM:SS ke detik
-      const waktu1 = toSeconds(data[i - 1]["time"]);
-      const waktu2 = toSeconds(data[i]["time"]);
-      const waktu = (waktu2 - waktu1) / 3600; // Konversi ke jam
-
-      if (isNaN(jarak) || isNaN(waktu) || waktu <= 0) {
-        console.error(
-          `Kesalahan pada segmen ${i}: Jarak atau waktu tidak valid`
-        );
-        continue; // Abaikan segmen dengan data tidak valid
-      }
-
-      totalJarak += jarak;
-      totalWaktu += waktu;
-    }
-
-    if (totalWaktu === 0) {
-      throw new Error("Total waktu tidak valid (nol atau negatif).");
-    }
-
-    const kecepatanRataRata = totalJarak / totalWaktu;
-    return kecepatanRataRata;
-  };
-
-  const toSeconds = (timeString) => {
-    const [hours, minutes, seconds] = timeString.split(":").map(Number);
-    return hours * 3600 + minutes * 60 + seconds;
-  };
-
-  const toRadians = (degree) => {
-    return degree * (Math.PI / 180);
-  };
-
-  const data = [
-    { lat: "-6.9340079", lng: "107.7281035", time: "22:37:09" },
-    { lat: "-6.9340079", lng: "107.7281035", time: "22:38:42" },
-    { lat: "-6.9340079", lng: "107.7281035", time: "22:38:43" },
-    { lat: "-6.9340079", lng: "107.7281035", time: "22:43:16" },
-    { lat: "-6.9340079", lng: "107.7281035", time: "22:43:19" },
-    { lat: "-6.9340079", lng: "107.7281035", time: "22:43:25" },
-  ];
-
-  console.log("kecepatan: ", hitungKecepatan(data));
+  hitungHambatan(titik1, titik2, csvFilePath);
 
   pool.query(
     `
-        SELECT lat, lng, time FROM app.posisi WHERE time >= $1;
+        SELECT * FROM (
+            SELECT lat, lng, time FROM app.posisi
+            ORDER BY time DESC
+            LIMIT 10
+        ) sub
+        ORDER BY time ASC;
+
     `,
-    [timeString],
+    [],
     (dbError, dbResponse) => {
       if (dbError) throw dbError;
       httpResponse.json(dbResponse.rows);

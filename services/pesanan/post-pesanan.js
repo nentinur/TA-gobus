@@ -1,6 +1,7 @@
 const pool = require("../../utils/db-pool");
 
 module.exports = (httpRequest, httpResponse) => {
+  console.log("request body: ", httpRequest.body);
   pool.query(
     `
         INSERT INTO app.pesanan( 
@@ -12,8 +13,6 @@ module.exports = (httpRequest, httpResponse) => {
           jumlah_kursi, 
           lat_naik, 
           lon_naik, 
-          lat_turun, 
-          lon_turun, 
           tarif
         ) 
         VALUES (
@@ -25,9 +24,7 @@ module.exports = (httpRequest, httpResponse) => {
           $6, 
           $7, 
           $8, 
-          $9, 
-          $10, 
-          $11
+          $9
         );
     `,
     [
@@ -39,8 +36,6 @@ module.exports = (httpRequest, httpResponse) => {
       httpRequest.body.jumlah_kursi,
       httpRequest.body.lat_naik,
       httpRequest.body.lon_naik,
-      httpRequest.body.lat_turun,
-      httpRequest.body.lon_turun,
       httpRequest.body.tarif,
     ],
     (dbError, dbResponse) => {
