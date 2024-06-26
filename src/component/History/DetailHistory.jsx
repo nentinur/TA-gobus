@@ -19,42 +19,61 @@ import axios from "axios";
 export default function DetailHistory() {
   const { state } = useLocation();
   const { id } = state;
-  console.log("index: " + id);
-  // mengambil data detail pesanan
-  const [data, setData] = useState([]);
-  const [prediction, setPrediction] = useState([]);
+
+  // State untuk data dan prediksi
+  const [data, setData] = useState({});
+  const [prediction, setPrediction] = useState({});
+  const [loading, setLoading] = useState(true); // Loading state
+
   useEffect(() => {
+    // Mengambil data detail pesanan
+    setLoading(true);
     axios
       .get("http://localhost:3100/pesanan/pesanan-detail", {
         params: {
           id_pesanan: id,
         },
       })
-      .then(function (response) {
-        console.log(response.data);
+      .then((response) => {
         setData(response.data);
+        console.log(response.data);
+        setLoading(false);
       })
-      .catch(function (error) {
+      .catch((error) => {
         console.log(error);
-      })
-      .then(function () {
-        // always executed
+        setLoading(false); // Set loading ke false meski ada error
       });
-  }, []);
+  }, [id]);
+
   useEffect(() => {
-    axios
-      .get("http://localhost:3100/posisi/predict", {})
-      .then(function (response) {
-        console.log("prediction: ", response.data.result);
-        setPrediction(response.data);
-      })
-      .catch(function (error) {
-        console.log(error);
-      })
-      .then(function () {
-        // always executed
-      });
-  }, []);
+    const estimate = () => {
+      if (data.lat_naik && data.lon_naik) {
+        // Mengambil prediksi posisi
+        axios
+          .post("http://localhost:3100/posisi/predict", {
+            lat_naik: data.lat_naik,
+            lon_naik: data.lon_naik,
+            jurusan: data.jurusan,
+          })
+          .then((response) => {
+            setPrediction(response.data);
+            console.log("estimasi waktu: ", prediction);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+    };
+    setInterval(estimate, 5000);
+  }, [data]);
+
+  if (loading) {
+    return <Typography variant="h6">Loading...</Typography>; // Render indikator loading
+  }
+
+  if (!data.jurusan) {
+    return <Typography variant="h6">Data tidak ditemukan</Typography>; // Render jika data tidak ditemukan
+  }
 
   return (
     <div>
@@ -91,12 +110,16 @@ export default function DetailHistory() {
         </List>
         <Box sx={{ padding: 2 }}>
           <Typography variant="h6">
-            Estimasi waktu kedatangan: {prediction.result}
+            Estimasi waktu kedatangan: {prediction.result || "Loading.."}
           </Typography>
         </Box>
       </div>
       <div>
-        <HistoryMaps no_bus={data.no_bus} />
+        <HistoryMaps
+          no_bus={data.no_bus}
+          lat_naik={data.lat_naik}
+          lon_naik={data.lon_naik}
+        />
       </div>
     </div>
   );

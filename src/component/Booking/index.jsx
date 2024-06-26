@@ -70,8 +70,8 @@ export const Booking = () => {
         nama: values.nama,
         kontak: values.kontak,
         jumlah_kursi: values.jumlah_kursi,
-        lat_naik: values.lat_awal,
-        lon_naik: values.lon_awal,
+        lat_naik: values.lat_naik,
+        lon_naik: values.lon_naik,
         tarif: values.total_tarif,
       })
       .then((res) => {
@@ -110,8 +110,8 @@ export const Booking = () => {
     kontak: "",
     jumlah_kursi: 0,
     total_tarif: 0,
-    lat_naik: "",
-    lon_naik: "",
+    lat_naik: 0,
+    lon_naik: 0,
   });
 
   console.log(values);

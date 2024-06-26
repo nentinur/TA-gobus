@@ -24,7 +24,7 @@ Leaflet.Icon.Default.mergeOptions({
 export default function HistoryMaps(props) {
   return (
     <MapContainer
-      center={[-6.9316648, 107.7229107]}
+      center={[props.lat_naik, props.lon_naik]}
       zoom={20}
       style={{ height: "400px", margin: "10px", zIndex: 0 }}
     >
@@ -33,7 +33,7 @@ export default function HistoryMaps(props) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <TrackMaps no_bus={props.no_bus} />
-      <CurrrentPosition />
+      <CurrrentPosition lat_naik={props.lat_naik} lon_naik={props.lon_naik} />
     </MapContainer>
   );
 }
@@ -76,6 +76,7 @@ function TrackMaps(props) {
       clearInterval(intervalId);
     };
   }, [nobus]);
+  console.log("bus: ", lat, lng);
 
   // Jika lat dan lng adalah null atau tidak valid, tidak render Marker
   return lat !== null && lng !== null ? (
@@ -86,29 +87,11 @@ function TrackMaps(props) {
 }
 
 // mengambil posisi terkini
-const CurrrentPosition = () => {
-  const map = useMap();
-  const [position, setPosition] = useState(null);
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setPosition({ lat: latitude, lng: longitude });
-      },
-      (err) => console.error(err)
-    );
-  }, []);
-  // useEffect(() => {
-  //   setInterval(() => {
-  //     map.locate().on("locationfound", function (e) {
-  //       setPosition(e.latlng);
-  //       map.flyTo(e.latlng, map.getZoom());
-  //     });
-  //   }, 3000);
-  // }, [map]);
-  return position === null ? null : (
-    <Marker position={position}>
-      <Popup>You are here</Popup>
+const CurrrentPosition = (props) => {
+  console.log("naik: ", props.lat_naik, props.lon_naik);
+  return props.lat_naik !== null && props.lon_naik !== null ? (
+    <Marker position={[props.lat_naik, props.lon_naik]}>
+      <Popup>Titik Naik Anda</Popup>
     </Marker>
-  );
+  ) : null;
 };

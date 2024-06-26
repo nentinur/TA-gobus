@@ -26,8 +26,9 @@ export default function BookingMaps({ onChange }) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        setCenter({ lat: latitude, lng: longitude });
-        setMarkerPosition({ lat: latitude, lng: longitude });
+        const newCenter = { lat: latitude, lng: longitude };
+        setCenter(newCenter);
+        setMarkerPosition(newCenter);
       },
       (err) => console.error(err)
     );
