@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Leaflet from "leaflet";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMap,
-  LayerGroup,
-} from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "axios";
 
@@ -25,7 +18,7 @@ export default function HistoryMaps(props) {
   return (
     <MapContainer
       center={[props.lat_naik, props.lon_naik]}
-      zoom={20}
+      zoom={14}
       style={{ height: "400px", margin: "10px", zIndex: 0 }}
     >
       <TileLayer
@@ -39,8 +32,7 @@ export default function HistoryMaps(props) {
 }
 
 function TrackMaps(props) {
-  const { no_bus: nobus } = props; // Destructuring props untuk mengambil no_bus
-  const map = useMap();
+  const { no_bus: nobus } = props;
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
 
@@ -76,7 +68,6 @@ function TrackMaps(props) {
       clearInterval(intervalId);
     };
   }, [nobus]);
-  console.log("bus: ", lat, lng);
 
   // Jika lat dan lng adalah null atau tidak valid, tidak render Marker
   return lat !== null && lng !== null ? (
@@ -88,7 +79,6 @@ function TrackMaps(props) {
 
 // mengambil posisi terkini
 const CurrrentPosition = (props) => {
-  console.log("naik: ", props.lat_naik, props.lon_naik);
   return props.lat_naik !== null && props.lon_naik !== null ? (
     <Marker position={[props.lat_naik, props.lon_naik]}>
       <Popup>Titik Naik Anda</Popup>

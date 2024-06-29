@@ -109,6 +109,7 @@ export default function DetailHistory() {
           </ListItem>
         </List>
         <Box sx={{ padding: 2 }}>
+          <Typography variant="h6"></Typography>
           <Typography variant="h6">
             Estimasi waktu kedatangan: {prediction.result || "Loading.."}
           </Typography>

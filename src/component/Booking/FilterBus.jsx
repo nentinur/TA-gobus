@@ -55,14 +55,6 @@ export const FilterBus = () => {
       value: "lwp-cbr",
       label: "Leuwipanjang - Cibiru",
     },
-    {
-      value: "cbr-crm",
-      label: "Cibiru - Cibeureum",
-    },
-    {
-      value: "crm-cbr",
-      label: "Cibeureum - Cibiru",
-    },
   ];
 
   // filter jurusan bus

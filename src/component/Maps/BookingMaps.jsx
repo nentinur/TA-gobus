@@ -44,7 +44,7 @@ export default function BookingMaps({ onChange }) {
   return (
     <MapContainer
       center={center}
-      zoom={15}
+      zoom={13}
       style={{ height: "400px", margin: "10px", zIndex: 0 }}
     >
       <TileLayer
