@@ -3,11 +3,9 @@ const pool = require("../../utils/db-pool");
 const fs = require("fs");
 const csv = require("csv-parser");
 const geolib = require("geolib");
-
 const modelPath = "file/knn_model.onnx";
 const dataHambatan = "file/hambatan.csv";
 const dataRute = "file/rute.csv";
-
 module.exports = async (httpRequest, httpResponse) => {
   try {
     async function predict(jarak, kecepatan, hambatan) {
@@ -21,14 +19,10 @@ module.exports = async (httpRequest, httpResponse) => {
           new Float32Array(inputData),
           [1, inputData.length]
         );
-
         const feeds = { [inputName]: inputTensor };
         const outputMap = await session.run(feeds);
-
         const outputName = session.outputNames[0];
         const prediction = outputMap[outputName].data;
-        console.log(prediction);
-
         const integerPart = Math.floor(prediction);
         const microsecondPart = Math.floor((prediction - integerPart) * 1e6);
         const epoch = new Date("2024-01-01T00:00:00Z");
@@ -36,12 +30,11 @@ module.exports = async (httpRequest, httpResponse) => {
         epoch.setMilliseconds(
           epoch.getMilliseconds() + Math.floor(microsecondPart / 1000)
         );
-        const waktu = epoch.toISOString().substr(11, 8); // mengambil HH:MM:SS dari ISO string
-
-        return waktu; // Return the prediction result
+        const waktu = epoch.toISOString().substr(11, 8);
+        return waktu;
       } catch (error) {
         console.error("Error during inference:", error);
-        throw error; // Rethrow error to be caught by the calling function
+        throw error;
       }
     }
     const toSeconds = (timeString) => {
@@ -107,16 +100,31 @@ module.exports = async (httpRequest, httpResponse) => {
 
     // Menghitung jarak total antara dua titik pada rute
     const jarakTotal = (route, startIdx, endIdx) => {
-      let totalDistance;
+      // Inisialisasi totalDistance dengan 0
+      let totalDistance = 0;
 
-      for (let i = startIdx; i < endIdx; i++) {
-        totalDistance += geolib.getDistance(
-          { latitude: route[i].lat, longitude: route[i].lng },
-          { latitude: route[i + 1].lat, longitude: route[i + 1].lng }
-        );
+      // Validasi panjang array dan indeks
+      if (startIdx >= endIdx || startIdx < 0 || endIdx >= route.length) {
+        console.error("Invalid indices:", { startIdx, endIdx });
+        return NaN;
       }
 
-      return totalDistance / 1000;
+      for (let i = startIdx; i < endIdx; i++) {
+        if (route[i] && route[i + 1]) {
+          // Pastikan route[i] dan route[i + 1] ada
+          const distance = geolib.getDistance(
+            { latitude: route[i].lat, longitude: route[i].lng },
+            { latitude: route[i + 1].lat, longitude: route[i + 1].lng }
+          );
+
+          totalDistance += distance;
+        } else {
+          console.error("Invalid route points at index:", i);
+          return NaN;
+        }
+      }
+
+      return totalDistance / 1000; // Konversi ke kilometer
     };
 
     function hitungHambatan(titik1, titik2, dataHambatan) {
@@ -169,11 +177,11 @@ module.exports = async (httpRequest, httpResponse) => {
       pool.query(
         `
                 SELECT * FROM (
-                    SELECT lat, lng, time FROM app.posisi
-                    ORDER BY time DESC
-                    LIMIT 10
-                ) sub
-                ORDER BY time ASC;
+                     SELECT * FROM app.posisi
+                     ORDER BY created_at DESC
+                     LIMIT 10
+                 ) sub
+                ORDER BY created_at ASC;
             `,
         [],
         (dbError, dbResponse) => {
@@ -186,7 +194,7 @@ module.exports = async (httpRequest, httpResponse) => {
     const posisiBus = await new Promise((resolve, reject) => {
       pool.query(
         `
-                SELECT lat, lng FROM app.posisi ORDER BY id_posisi DESC LIMIT 1
+                SELECT lat, lng FROM app.posisi ORDER BY created_at DESC LIMIT 1
             `,
         [],
         (dbError, dbResponse) => {
@@ -196,6 +204,8 @@ module.exports = async (httpRequest, httpResponse) => {
       );
     });
     bus = [posisiBus[0].lat, posisiBus[0].lng];
+    console.log(naik);
+    console.log(bus);
 
     // Hitung kecepatan
 
@@ -212,14 +222,13 @@ module.exports = async (httpRequest, httpResponse) => {
         .on("end", () => {
           let titik1Index;
           let titik2Index;
-          if (httpRequest.body.jurusan === "Cibiru - Leuwipanjang") {
+          if (httpRequest.body.jurusan == "Cibiru - Leuwipanjang") {
             titik1Index = nearestPoint(bus, route);
             titik2Index = nearestPoint(naik, route);
-          } else {
+          } else if (httpRequest.body.jurusan == "Leuwipanjang - Cibiru") {
             titik1Index = nearestPoint(naik, route);
             titik2Index = nearestPoint(bus, route);
           }
-
           jarak = jarakTotal(route, titik1Index, titik2Index);
           resolve();
         })
@@ -228,17 +237,11 @@ module.exports = async (httpRequest, httpResponse) => {
         });
     });
 
-    // Prediksi
-    console.log("jurusan: ", httpRequest.body.jurusan);
-    if (httpRequest.body.jurusan === "Cibiru - Leuwipanjang") {
+    if (httpRequest.body.jurusan == "Cibiru - Leuwipanjang") {
       hambatan = await hitungHambatan(bus, naik, dataHambatan);
-    } else {
+    } else if (httpRequest.body.jurusan == "Leuwipanjang - Cibiru") {
       hambatan = await hitungHambatan(naik, bus, dataHambatan);
     }
-    console.log("kecepatan: ", kecepatan);
-    console.log("Jarak Total:", jarak);
-    console.log("hambatan: ", hambatan);
-    // Misalkan fungsi ini ada di dalam async function
 
     // Pengecekan validitas variabel sebelum menjalankan prediksi
     if (
@@ -254,10 +257,16 @@ module.exports = async (httpRequest, httpResponse) => {
           jarak: jarak,
           hambatan: hambatan,
         });
+        console.log("jarak bus: ", jarak);
+        console.log("kecepatan bus: ", kecepatan);
+        console.log("hambatan: ", hambatan);
+        console.log("estimasi waktu: ", result);
       } catch (error) {
         httpResponse.status(500).send("Error during prediction");
         console.error("Error during prediction:", error);
       }
+    } else {
+      httpResponse.status(400).send("ada yang salah");
     }
 
     // Respon

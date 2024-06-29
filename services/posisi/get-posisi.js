@@ -3,7 +3,7 @@ const pool = require("../../utils/db-pool");
 module.exports = (httpRequest, httpResponse) => {
   pool.query(
     `
-        SELECT lat, lng FROM app.posisi ORDER BY id_posisi DESC LIMIT 1
+        SELECT lat, lng FROM app.posisi ORDER BY created_at DESC LIMIT 1
     `,
     [],
     (dbError, dbResponse) => {

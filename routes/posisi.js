@@ -4,9 +4,6 @@ const router = express.Router();
 const getPosisi = require("../services/posisi/get-posisi");
 router.get("/", getPosisi);
 
-const getKecepatan = require("../services/posisi/kecepatan");
-router.get("/kecepatan", getKecepatan);
-
 const deletePosisi = require("../services/posisi/delete-posisi");
 router.delete("/", deletePosisi);
 

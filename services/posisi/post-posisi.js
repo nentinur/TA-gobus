@@ -6,7 +6,7 @@ const port = "1885";
 const clientId = `mqtt_${Math.random().toString(16).slice(3)}`;
 const connectUrl = `${protocol}://${host}:${port}`;
 
-const nobus = "E1234ST";
+const nobus = "D1234HH";
 
 const client = mqtt.connect(connectUrl, {
   clientId,
@@ -58,7 +58,7 @@ client.on("message", (topic, payload) => {
     (dbError, dbResponse) => {
       if (dbError) throw dbError;
       //httpResponse.json();
-      dbResponse.rows;
+      console.log(dbResponse.rows);
     }
   );
 });
