@@ -3,7 +3,7 @@ const pool = require("../../utils/db-pool");
 module.exports = (httpRequest, httpResponse) => {
   pool.query(
     `
-        SELECT * FROM app.pesanan
+        SELECT * FROM app.pesanan ORDER BY tanggal DESC
     `,
     [],
     (dbError, dbResponse) => {

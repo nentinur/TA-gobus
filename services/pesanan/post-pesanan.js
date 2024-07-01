@@ -25,7 +25,8 @@ module.exports = (httpRequest, httpResponse) => {
           $7, 
           $8, 
           $9
-        );
+        )
+        RETURNING id_pesanan;
     `,
     [
       httpRequest.body.id_user,
@@ -40,8 +41,8 @@ module.exports = (httpRequest, httpResponse) => {
     ],
     (dbError, dbResponse) => {
       if (dbError) throw dbError;
-      httpResponse.json(dbResponse.rows);
-      console.log(dbResponse);
+      httpResponse.json({ id: dbResponse.rows[0].id_pesanan });
+      console.log(dbResponse.rows[0].id_pesanan);
     }
   );
 };

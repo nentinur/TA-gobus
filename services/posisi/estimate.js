@@ -1,7 +1,7 @@
-const ort = require("onnxruntime-node");
 const pool = require("../../utils/db-pool");
 const fs = require("fs");
 const csv = require("csv-parser");
+const ort = require("onnxruntime-node");
 const geolib = require("geolib");
 const modelPath = "file/knn_model.onnx";
 const dataHambatan = "file/hambatan.csv";
@@ -25,12 +25,11 @@ module.exports = async (httpRequest, httpResponse) => {
         const prediction = outputMap[outputName].data;
         const integerPart = Math.floor(prediction);
         const microsecondPart = Math.floor((prediction - integerPart) * 1e6);
-        const epoch = new Date("2024-01-01T00:00:00Z");
-        epoch.setSeconds(epoch.getSeconds() + integerPart);
-        epoch.setMilliseconds(
-          epoch.getMilliseconds() + Math.floor(microsecondPart / 1000)
-        );
-        const waktu = epoch.toISOString().substr(11, 8);
+        const minutes = Math.floor(integerPart / 60);
+        const seconds = integerPart % 60;
+        const additionalSeconds = Math.floor(microsecondPart / 1e6);
+        const totalSeconds = seconds + additionalSeconds;
+        const waktu = `${minutes} menit ${totalSeconds} detik lagi`;
         return waktu;
       } catch (error) {
         console.error("Error during inference:", error);
@@ -204,8 +203,6 @@ module.exports = async (httpRequest, httpResponse) => {
       );
     });
     bus = [posisiBus[0].lat, posisiBus[0].lng];
-    console.log(naik);
-    console.log(bus);
 
     // Hitung kecepatan
 
@@ -257,10 +254,10 @@ module.exports = async (httpRequest, httpResponse) => {
           jarak: jarak,
           hambatan: hambatan,
         });
-        console.log("jarak bus: ", jarak);
-        console.log("kecepatan bus: ", kecepatan);
-        console.log("hambatan: ", hambatan);
-        console.log("estimasi waktu: ", result);
+        // console.log("jarak bus: ", jarak);
+        // console.log("kecepatan bus: ", kecepatan);
+        // console.log("hambatan: ", hambatan);
+        // console.log("estimasi waktu: ", result);
       } catch (error) {
         httpResponse.status(500).send("Error during prediction");
         console.error("Error during prediction:", error);
