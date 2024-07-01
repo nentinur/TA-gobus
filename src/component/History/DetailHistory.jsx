@@ -24,7 +24,7 @@ export default function DetailHistory() {
   const [data, setData] = useState({});
   const [prediction, setPrediction] = useState({});
   const [loading, setLoading] = useState(true); // Loading state
-
+  console.log(id);
   useEffect(() => {
     // Mengambil data detail pesanan
     setLoading(true);

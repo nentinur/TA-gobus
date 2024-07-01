@@ -27,9 +27,6 @@ import BookingMaps from "../Maps/BookingMaps";
 
 export const Booking = () => {
   const [open, setOpen] = useState();
-  const handleOk = () => {
-    navigate("/history");
-  };
 
   const close = () => {
     setOpen(false);
@@ -39,8 +36,13 @@ export const Booking = () => {
   const { state } = useLocation();
   const { id } = state;
 
+  const handleOk = () => {
+    navigate("/history/detail", { state: { id: pesanan.id } });
+  };
+
   // mengambil data bus berdasarkan dipilih
   const [data, setData] = useState([]);
+  const [pesanan, setPesanan] = useState();
   useEffect(() => {
     axios
       .get("http://localhost:3100/bus/jadwal", {
@@ -76,6 +78,7 @@ export const Booking = () => {
       })
       .then((res) => {
         console.log(res);
+        setPesanan(res.data);
         setOpen(true);
         updateBus();
       })
@@ -199,18 +202,21 @@ export const Booking = () => {
             </ListItem>
 
             <TextField
+              required
               id="outlined-number"
               label="Jumlah Kursi"
               type="number"
               onChange={handleClickKursi}
             />
             <TextField
+              required
               id="outlined"
               label="Nama"
               type="text"
               onChange={(e) => setValues({ ...values, nama: e.target.value })}
             />
             <TextField
+              required
               id="outlined"
               label="Nomor HP/WA"
               type="text"
