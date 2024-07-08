@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from "react";
 import Leaflet from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "axios";
+import { Icon } from "leaflet";
+import geojsonData from "../../../src/rute.json";
 
 Leaflet.Icon.Default.imagePath = "../node_modules/leaflet";
+// Buat ikon kustom
+const customIcon = new Icon({
+  iconUrl: require("../../../src/bus-icon.png"), // Ganti dengan path ke gambar PNG Anda
+  iconSize: [38, 38], // Ukuran ikon (lebar dan tinggi)
+});
 
 delete Leaflet.Icon.Default.prototype._getIconUrl;
 
@@ -27,6 +34,7 @@ export default function HistoryMaps(props) {
       />
       <TrackMaps no_bus={props.no_bus} />
       <CurrrentPosition lat_naik={props.lat_naik} lon_naik={props.lon_naik} />
+      <GeoJSON style={{ weight: 5 }} data={geojsonData.features} />
     </MapContainer>
   );
 }
@@ -71,7 +79,7 @@ function TrackMaps(props) {
 
   // Jika lat dan lng adalah null atau tidak valid, tidak render Marker
   return lat !== null && lng !== null ? (
-    <Marker position={[lat, lng]}>
+    <Marker icon={customIcon} position={[lat, lng]}>
       <Popup>Bus {nobus}</Popup>
     </Marker>
   ) : null;

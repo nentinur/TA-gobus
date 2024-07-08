@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Leaflet from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import geojsonData from "../../../src/rute.json";
 
 Leaflet.Icon.Default.imagePath = "../node_modules/leaflet";
 
@@ -60,6 +61,7 @@ export default function BookingMaps({ onChange }) {
           Silakan sesuaikan titik dimana Anda akan naik
         </Popup>
       </Marker>
+      <GeoJSON style={{ weight: 5 }} data={geojsonData.features} />
     </MapContainer>
   );
 }

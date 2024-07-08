@@ -223,7 +223,7 @@ export const Booking = () => {
               onChange={(e) => setValues({ ...values, kontak: e.target.value })}
             />
             <Typography sx={{ ml: 2, flex: 1 }}>
-              Pilih Titik Anda Naik:
+              Pilih Titik Anda Naik: (tempatkan pin ke garis biru)
             </Typography>
           </Box>
           <BookingMaps onChange={handleTitikNaikChange} />

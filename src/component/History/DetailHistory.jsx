@@ -7,6 +7,7 @@ import {
   Avatar,
   ListItemAvatar,
   Button,
+  Alert,
 } from "@mui/material";
 import { useLocation } from "react-router-dom";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
@@ -24,7 +25,15 @@ export default function DetailHistory() {
   const [data, setData] = useState({});
   const [prediction, setPrediction] = useState({});
   const [loading, setLoading] = useState(true); // Loading state
-  console.log(id);
+  const [prevData, setPrevData] = useState(null);
+  const [showAlert, setShowAlert] = useState(false);
+
+  // Fungsi pembanding untuk mengecek perbedaan data
+  const isDataDifferent = (newData, oldData) => {
+    console.log("data sekarang: ", newData);
+    console.log("prev data: ", oldData);
+    return JSON.stringify(newData) !== JSON.stringify(oldData);
+  };
   useEffect(() => {
     // Mengambil data detail pesanan
     setLoading(true);
@@ -56,16 +65,26 @@ export default function DetailHistory() {
             jurusan: data.jurusan,
           })
           .then((response) => {
-            setPrediction(response.data);
-            console.log("estimasi waktu: ", prediction);
+            if (isDataDifferent(response.data, prevData)) {
+              console.log("is different: ", isDataDifferent);
+              // Memicu alert hanya jika data baru berbeda
+              setShowAlert(true);
+              setTimeout(() => {
+                setShowAlert(false);
+              }, 3000); // Alert akan menghilang setelah 3 detik
+            }
+            setPrevData(prediction); // Simpan data prediksi saat ini ke prevData sebelum di-update
+            setPrediction(response.data); // Update data prediksi
           })
           .catch((error) => {
             console.log(error);
           });
       }
     };
-    setInterval(estimate, 5000);
-  }, [data]);
+    estimate();
+    const interval = setInterval(estimate, 5000); // Perbarui data setiap 5 detik
+    return () => clearInterval(interval);
+  }, [data, prediction, prevData]);
 
   if (loading) {
     return <Typography variant="h6">Loading...</Typography>; // Render indikator loading
@@ -101,6 +120,7 @@ export default function DetailHistory() {
               <Typography variant="h6">{data.jurusan}</Typography>
               <Typography variant="body2">Jam: {data.jam} WIB</Typography>
               <Typography variant="body2">No. Bus: {data.no_bus}</Typography>
+
               <br />
               <Button variant="outlined" startIcon={<WhatsAppIcon />}>
                 <Link href="http://wa.me/6287745677969">Hubungi Sopir</Link>
@@ -109,7 +129,21 @@ export default function DetailHistory() {
           </ListItem>
         </List>
         <Box sx={{ padding: 2 }}>
-          <Typography variant="h6"></Typography>
+          <div>
+            {showAlert && (
+              <Alert
+                severity="success"
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  zIndex: 1000,
+                }}
+              >
+                Posisi bus dan hasil estimasi diperbarui!
+              </Alert>
+            )}
+          </div>
           <Typography variant="h6">
             Estimasi waktu kedatangan: {prediction.result || "Loading.."}
           </Typography>
