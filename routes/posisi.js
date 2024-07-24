@@ -13,4 +13,7 @@ router.post("/rute", getRute);
 const estimate = require("../services/posisi/estimate");
 router.post("/predict", estimate);
 
+const estimate2 = require("../services/posisi/estimate2");
+router.post("/predict2", estimate2);
+
 module.exports = router;
